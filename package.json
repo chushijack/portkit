@@ -1,7 +1,7 @@
 {
   "name": "portkit",
   "private": true,
-  "version": "0.9.21",
+  "version": "1.0.0",
   "license": "Apache-2.0",
   "type": "module",
   "packageManager": "pnpm@10.34.5",

@@ -1,6 +1,6 @@
 [package]
 name = "portkit"
-version = "0.9.21"
+version = "1.0.0"
 description = "跨平台端口管理桌面应用"
 authors = ["Chushi Jack"]
 license = "Apache-2.0"

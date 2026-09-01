@@ -1,0 +1,32 @@
+{
+  "tag": "v0.9.15",
+  "version": "0.9.15",
+  "name": "PortKit v0.9.15",
+  "publishedAt": "2026-08-29T12:00:00Z",
+  "htmlUrl": "https://github.com/chushijack/portkit/releases/tag/v0.9.15",
+  "notes": {
+    "zh-CN": "PortKit v0.9.15",
+    "en": "PortKit v0.9.15",
+    "ja": "PortKit v0.9.15"
+  },
+  "sections": [
+    {
+      "type": "fixed",
+      "items": {
+        "zh-CN": [
+          "修复 Release 工作流在打包完成前提前发布 GitHub Release 的问题",
+          "发布前校验安装包与 latest.json 已上传完成"
+        ],
+        "en": [
+          "Fix premature GitHub Release creation before packaging completes in the Release workflow",
+          "Validate installers and latest.json are uploaded before publishing"
+        ],
+        "ja": [
+          "Release ワークフローでパッケージ完了前に GitHub Release が公開される問題を修正",
+          "リリース前にインストーラと latest.json のアップロード完了を検証"
+        ]
+      }
+    }
+  ],
+  "assets": []
+}

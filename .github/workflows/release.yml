@@ -1,0 +1,436 @@
+# 按 git tag 打包 PortKit，并上传到本仓库 GitHub Release。
+#
+# 发布前必须在 docs/changelog/<tag>/release.json 写好更新日志；
+# CI 会校验该文件，并据此生成 GitHub Release 正文。
+#
+# 触发方式：
+# - 推送 v 开头的 tag：Release Tag 与版本号使用 github.ref_name
+# - Actions 手动运行：使用输入参数 tag
+#
+# 流程：
+#   resolve tag → prepare (Draft Release)
+#   → publish-tauri (Windows + macOS)
+#   → finalize-release (发布 Release，latest.json 方可被 updater 使用)
+#
+# 产物：
+# - Windows：NSIS（.exe）、MSI（.msi）、便携包（.zip）
+# - macOS：通用 DMG（Apple Silicon + Intel）
+# - 更新：latest.json（Windows 优先 NSIS）
+# 文件名：PortKit_<version>_<windows|mac>.*
+#
+# 应用内更新依赖仓库 Secrets：
+# - TAURI_SIGNING_PRIVATE_KEY
+# - TAURI_SIGNING_PRIVATE_KEY_PASSWORD（无密码可留空）
+#
+# latest.json 只对已发布（非 draft）Release 生效。
+# 未配置代码签名。macOS 首次打开可能需要右键 → 打开。
+
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release Tag（必须以 v 开头）'
+        required: true
+        type: string
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+      version: ${{ steps.meta.outputs.version }}
+      release_id: ${{ steps.release.outputs.release_id }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Resolve tag and version
+        id: meta
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            RAW="$INPUT_TAG"
+          else
+            RAW="$REF_NAME"
+          fi
+          RAW="${RAW#refs/tags/}"
+          RAW="$(echo "$RAW" | tr -d '[:space:]')"
+          if [ -z "$RAW" ]; then
+            echo "Release tag is empty"
+            exit 1
+          fi
+          case "$RAW" in
+            v*) ;;
+            *) RAW="v$RAW" ;;
+          esac
+          VERSION="${RAW#v}"
+          # Cargo / Tauri / npm 都要求 semver：MAJOR.MINOR.PATCH，可选 -prerelease。
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+            echo "Invalid app version from tag ${RAW}: ${VERSION}"
+            echo "Use a semver tag like v0.9.10 or v0.9.10-1, not v0.9.9.1"
+            exit 1
+          fi
+          echo "tag=$RAW" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate local changelog
+        env:
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          set -euo pipefail
+          CHANGELOG_FILE="docs/changelog/${TAG}/release.json"
+          if [ ! -f "$CHANGELOG_FILE" ]; then
+            echo "Missing changelog: ${CHANGELOG_FILE}"
+            echo "Create docs/changelog/${TAG}/release.json before releasing."
+            exit 1
+          fi
+          node scripts/render-release-notes.mjs "$CHANGELOG_FILE" "$TAG" >/dev/null
+
+      - name: Render release notes
+        id: changelog
+        env:
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          set -euo pipefail
+          CHANGELOG_FILE="docs/changelog/${TAG}/release.json"
+          NOTES="$(node scripts/render-release-notes.mjs "$CHANGELOG_FILE" "$TAG")"
+          {
+            echo "notes<<EOF"
+            echo "$NOTES"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create draft GitHub Release
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ steps.meta.outputs.tag }}
+          SHA: ${{ github.sha }}
+          NOTES: ${{ steps.changelog.outputs.notes }}
+        run: |
+          set -euo pipefail
+
+          delete_orphan_untagged_drafts() {
+            local orphan_ids
+            orphan_ids="$(gh api "repos/${GITHUB_REPOSITORY}/releases" --paginate --jq "[.[] | select(.draft==true and (.tag_name==null or (.tag_name|startswith(\"untagged-\"))) and .name==\"PortKit ${TAG}\") | .id] | .[]")"
+            if [ -z "$orphan_ids" ]; then
+              return 0
+            fi
+            while IFS= read -r orphan_id; do
+              [ -z "$orphan_id" ] && continue
+              echo "Deleting orphan untagged draft ${orphan_id}"
+              gh api --method DELETE "repos/${GITHUB_REPOSITORY}/releases/${orphan_id}" || true
+            done <<< "$orphan_ids"
+          }
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; updating notes and keeping draft"
+            gh release edit "$TAG" --notes "$NOTES" --draft --target "$SHA"
+          else
+            delete_orphan_untagged_drafts
+            gh release create "$TAG" \
+              --draft \
+              --latest=false \
+              --verify-tag \
+              --title "PortKit ${TAG}" \
+              --notes "$NOTES" \
+              --target "$SHA"
+            echo "Created draft release $TAG"
+          fi
+
+          RELEASE_ID=""
+          for attempt in 1 2 3 4 5 6 8 10; do
+            RELEASE_ID="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" --jq .id 2>/dev/null || true)"
+            if [ -n "$RELEASE_ID" ] && [[ "$RELEASE_ID" =~ ^[0-9]+$ ]]; then
+              break
+            fi
+
+            RELEASE_ID="$(gh api "repos/${GITHUB_REPOSITORY}/releases" --paginate --jq "[.[] | select(.draft==true and .name==\"PortKit ${TAG}\") | .id][0]" 2>/dev/null || true)"
+            if [ -n "$RELEASE_ID" ] && [ "$RELEASE_ID" != "null" ] && [[ "$RELEASE_ID" =~ ^[0-9]+$ ]]; then
+              TAG_NAME="$(gh api "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}" --jq .tag_name)"
+              if [ -z "$TAG_NAME" ] || [ "$TAG_NAME" = "null" ] || [[ "$TAG_NAME" == untagged-* ]]; then
+                echo "Binding untagged draft ${RELEASE_ID} to ${TAG}"
+                jq -n \
+                  --arg tag "$TAG" \
+                  --arg sha "$SHA" \
+                  '{
+                    tag_name: $tag,
+                    target_commitish: $sha,
+                    draft: true,
+                    make_latest: "false"
+                  }' | gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}" --input -
+              fi
+              break
+            fi
+
+            echo "Waiting for release tag ${TAG} to become visible (${attempt}/10)..."
+            sleep 2
+          done
+
+          if [ -z "$RELEASE_ID" ] || [ "$RELEASE_ID" = "null" ] || ! [[ "$RELEASE_ID" =~ ^[0-9]+$ ]]; then
+            echo "Numeric Release ID not found for tag ${TAG} (commit ${SHA}), got: ${RELEASE_ID:-<empty>}"
+            gh release list --limit 5 || true
+            exit 1
+          fi
+
+          IS_DRAFT="$(gh release view "$TAG" --json isDraft --jq .isDraft)"
+          if [ "$IS_DRAFT" != "true" ]; then
+            echo "Release ${TAG} is public before build; forcing draft"
+            gh release edit "$TAG" --draft
+          fi
+
+          echo "Resolved release_id=${RELEASE_ID} for ${TAG} (draft)"
+          echo "release_id=${RELEASE_ID}" >> "$GITHUB_OUTPUT"
+
+  publish-tauri:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            os_name: mac
+            args: '--target universal-apple-darwin --bundles dmg'
+          - platform: windows-latest
+            os_name: windows
+            args: '--bundles nsis,msi'
+    runs-on: ${{ matrix.platform }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20.19.0'
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Set app version from tag
+        shell: bash
+        env:
+          APP_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          node <<'EOF'
+          const fs = require('fs');
+          const version = process.env.APP_VERSION;
+          if (!version) {
+            throw new Error('APP_VERSION is empty');
+          }
+          if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(version)) {
+            throw new Error(
+              `Invalid APP_VERSION "${version}". Cargo and Tauri require semver MAJOR.MINOR.PATCH, e.g. 0.9.10`
+            );
+          }
+          const confPath = 'src-tauri/tauri.conf.json';
+          const conf = JSON.parse(fs.readFileSync(confPath, 'utf8'));
+          conf.version = version;
+          fs.writeFileSync(confPath, JSON.stringify(conf, null, 2) + '\n');
+          const pkgPath = 'package.json';
+          const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+          pkg.version = version;
+          fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+          const cargoPath = 'src-tauri/Cargo.toml';
+          const cargo = fs.readFileSync(cargoPath, 'utf8').replace(
+            /^version\s*=\s*".*"/m,
+            `version = "${version}"`
+          );
+          fs.writeFileSync(cargoPath, cargo);
+          const lockPath = 'src-tauri/Cargo.lock';
+          if (fs.existsSync(lockPath)) {
+            const lock = fs.readFileSync(lockPath, 'utf8').replace(
+              /name = "portkit"\nversion = "[^"]+"/,
+              `name = "portkit"\nversion = "${version}"`
+            );
+            fs.writeFileSync(lockPath, lock);
+          }
+          EOF
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: '1.88.0'
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Cache Rust
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install WiX Toolset
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install wixtoolset -y --no-progress
+          $wix = Get-ChildItem 'C:\Program Files (x86)\WiX Toolset*' -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $wix) { throw 'WiX Toolset not found after install' }
+          Add-Content -Path $env:GITHUB_ENV -Value "WIX=$($wix.FullName)\"
+          Add-Content -Path $env:GITHUB_PATH -Value "$($wix.FullName)\bin"
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and upload installers
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: .
+          tagName: ${{ needs.prepare.outputs.tag }}
+          releaseId: ${{ needs.prepare.outputs.release_id }}
+          releaseName: PortKit ${{ needs.prepare.outputs.tag }}
+          releaseDraft: true
+          prerelease: false
+          uploadUpdaterJson: true
+          uploadUpdaterSignatures: true
+          updaterJsonPreferNsis: true
+          retryAttempts: 2
+          releaseAssetNamePattern: PortKit_[version]_${{ matrix.os_name }}[ext]
+          args: ${{ matrix.args }}
+
+      - name: Pack and upload Windows zip
+        if: runner.os == 'Windows'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Path 'src-tauri/target/release' -File |
+            Where-Object { $_.Name -in @('PortKit.exe', 'portkit.exe') } |
+            Select-Object -First 1
+          if (-not $exe) { throw 'PortKit executable not found in target/release' }
+          $zipName = "PortKit_$($env:VERSION)_windows.zip"
+          $zipPath = Join-Path (Get-Location) $zipName
+          if (Test-Path $zipPath) { Remove-Item $zipPath }
+          Compress-Archive -Path $exe.FullName -DestinationPath $zipPath
+          gh release upload $env:TAG $zipPath --clobber
+
+  finalize-release:
+    needs:
+      - prepare
+      - publish-tauri
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TAG: ${{ needs.prepare.outputs.tag }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Patch latest.json with release notes
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          set -euo pipefail
+          CHANGELOG_FILE="docs/changelog/${TAG}/release.json"
+          NOTES_EN="$(node scripts/render-release-notes.mjs "$CHANGELOG_FILE" "$TAG" --locale en)"
+          NOTES_ZH="$(node scripts/render-release-notes.mjs "$CHANGELOG_FILE" "$TAG" --locale zh-CN)"
+          NOTES_JA="$(node scripts/render-release-notes.mjs "$CHANGELOG_FILE" "$TAG" --locale ja)"
+          mkdir -p release-patch
+          gh release download "$TAG" --pattern latest.json --dir release-patch
+          test -f release-patch/latest.json
+          export NOTES_EN NOTES_ZH NOTES_JA
+          python3 <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          notes_en = os.environ["NOTES_EN"].strip()
+          notes_zh = os.environ["NOTES_ZH"].strip()
+          notes_ja = os.environ["NOTES_JA"].strip()
+          if not notes_en or not notes_zh or not notes_ja:
+              raise SystemExit("rendered localized release notes must not be empty")
+
+          path = Path("release-patch/latest.json")
+          manifest = json.loads(path.read_text(encoding="utf-8"))
+          manifest["notes"] = notes_en
+          manifest["notesLocalized"] = {
+              "zh-CN": notes_zh,
+              "en": notes_en,
+              "ja": notes_ja,
+          }
+          path.write_text(
+              json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
+              encoding="utf-8",
+          )
+          PY
+          gh release upload "$TAG" release-patch/latest.json --clobber
+
+      - name: Publish GitHub Release
+        run: |
+          set -euo pipefail
+          ASSET_NAMES="$(gh release view "$TAG" --json assets --jq '.assets[].name')"
+          echo "Release assets before publish:"
+          echo "$ASSET_NAMES"
+          if ! echo "$ASSET_NAMES" | grep -q 'latest.json'; then
+            echo "latest.json is missing; refusing to publish ${TAG}"
+            exit 1
+          fi
+          if ! echo "$ASSET_NAMES" | grep -q '_windows'; then
+            echo "Windows installer is missing; refusing to publish ${TAG}"
+            exit 1
+          fi
+          if ! echo "$ASSET_NAMES" | grep -q '_mac'; then
+            echo "macOS installer is missing; refusing to publish ${TAG}"
+            exit 1
+          fi
+          gh release edit "$TAG" --draft=false
+          gh release view "$TAG" --json isDraft,assets --jq '{draft: .isDraft, assets: [.assets[].name]}'
+
+      - name: Verify latest.json
+        run: |
+          set -euo pipefail
+          mkdir -p release-verify
+          gh release download "$TAG" --pattern latest.json --dir release-verify
+          test -f release-verify/latest.json
+          python3 <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          path = Path("release-verify/latest.json")
+          manifest = json.loads(path.read_text(encoding="utf-8"))
+          text = path.read_text(encoding="utf-8")
+          notes = manifest.get("notes")
+          if not isinstance(notes, str) or not notes.strip():
+              print("latest.json notes field is empty", file=sys.stderr)
+              sys.exit(1)
+          localized = manifest.get("notesLocalized")
+          if not isinstance(localized, dict):
+              print("latest.json notesLocalized field is missing", file=sys.stderr)
+              sys.exit(1)
+          for locale in ("zh-CN", "en", "ja"):
+              value = localized.get(locale)
+              if not isinstance(value, str) or not value.strip():
+                  print(f"latest.json notesLocalized.{locale} is empty", file=sys.stderr)
+                  sys.exit(1)
+          if "<details>" in notes:
+              print("latest.json notes must not contain GitHub collapsible HTML", file=sys.stderr)
+              sys.exit(1)
+          if "chushijack/portkit-releases" in text:
+              print("latest.json still points at deprecated portkit-releases repo", file=sys.stderr)
+              sys.exit(1)
+          if "chushijack/portkit" not in text:
+              print("latest.json does not reference chushijack/portkit", file=sys.stderr)
+              sys.exit(1)
+          print("latest.json verified")
+          PY

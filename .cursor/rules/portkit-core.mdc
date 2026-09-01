@@ -1,0 +1,47 @@
+---
+description: PortKit 核心原则、目录结构与分层架构
+alwaysApply: true
+---
+
+# PortKit 核心规范
+
+跨平台端口管理桌面应用（开源仓库）。Tauri App Identifier 固定为 `com.chushijack.portkit`。
+
+## 可读性优先
+
+用清晰命名、合理拆分、简单结构表达意图。注释只写「为什么、业务背景、特殊处理原因」，不要复述代码已经表达的内容。
+
+```rust
+// BAD
+count += 1; // 增加1
+
+// GOOD
+active_connections += 1; // 更新活动连接数量
+```
+
+## 目录结构
+
+```
+portkit/
+├── src/                    # Vue 3 前端
+│   ├── api/ components/ views/ stores/
+│   └── composables/ types/ utils/ i18n/
+├── src-tauri/              # Tauri 2 + Rust
+│   └── src/
+│       ├── commands/ services/ models/ repositories/
+│       ├── system/         # OS API：macos / windows
+│       └── utils/ errors/ config/
+├── docs/
+│   └── changelog/          # 更新日志源数据（官网通过 submodule 读取）
+├── assets/
+└── scripts/                # 发布辅助脚本
+```
+
+## 分层（禁止跨层）
+
+后端：Command → Service → System → OS
+前端：View → Component → Store → API → Tauri Command
+
+- Command 只接收 Tauri 调用、校验参数、返回结果，禁止直接操作系统。
+- 页面禁止直接 invoke；必须走 `src/api/`。
+- `mod.rs` 只负责导出，不写业务逻辑。

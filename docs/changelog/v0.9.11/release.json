@@ -1,0 +1,23 @@
+{
+  "tag": "v0.9.11",
+  "version": "0.9.11",
+  "name": "PortKit v0.9.11",
+  "publishedAt": "2026-08-24T12:00:00Z",
+  "htmlUrl": "https://github.com/chushijack/portkit/releases/tag/v0.9.11",
+  "notes": {
+    "zh-CN": "PortKit v0.9.11",
+    "en": "PortKit v0.9.11",
+    "ja": "PortKit v0.9.11"
+  },
+  "sections": [
+    {
+      "type": "fixed",
+      "items": {
+        "zh-CN": ["修复发布流程中的版本号解析问题"],
+        "en": ["Fix version parsing in the release workflow"],
+        "ja": ["リリースワークフローのバージョン解析の問題を修正"]
+      }
+    }
+  ],
+  "assets": []
+}

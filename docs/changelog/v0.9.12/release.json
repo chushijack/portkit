@@ -1,0 +1,35 @@
+{
+  "tag": "v0.9.12",
+  "version": "0.9.12",
+  "name": "PortKit v0.9.12",
+  "publishedAt": "2026-08-25T17:05:20Z",
+  "htmlUrl": "https://github.com/chushijack/portkit/releases/tag/v0.9.12",
+  "notes": {
+    "zh-CN": "PortKit v0.9.12",
+    "en": "PortKit v0.9.12",
+    "ja": "PortKit v0.9.12"
+  },
+  "sections": [
+    {
+      "type": "added",
+      "items": {
+        "zh-CN": ["桌面端与官网同步支持更新日志页面"],
+        "en": ["Desktop app and website now share the same changelog page"],
+        "ja": ["デスクトップアプリと公式サイトで更新履歴ページを同期"]
+      }
+    },
+    {
+      "type": "improved",
+      "items": {
+        "zh-CN": ["更新日志改为按版本目录维护，发布前必须先写本地 changelog"],
+        "en": [
+          "Changelog is now maintained per version under docs/changelog; must be written locally before release"
+        ],
+        "ja": [
+          "更新履歴をバージョン別ディレクトリで管理し、リリース前にローカル changelog の記述を必須化"
+        ]
+      }
+    }
+  ],
+  "assets": []
+}

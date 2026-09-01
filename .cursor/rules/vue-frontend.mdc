@@ -1,0 +1,37 @@
+---
+description: Vue3 Composition API、文件结构与组件命名
+globs: src/**/*.vue
+alwaysApply: false
+---
+
+# Vue3 前端规范
+
+## Composition API（强制）
+
+使用 `<script setup lang="ts">`。禁止 Options API（export default { data() {} }）。
+
+## 文件结构（顺序固定）
+
+```vue
+<template>
+</template>
+
+<script setup lang="ts">
+</script>
+
+<style scoped>
+</style>
+```
+
+文件顶部必须有 HTML 文件说明注释（见 file-headers 规则）。
+
+## 命名与目录
+
+- 组件/页面文件：PascalCase（PortTable.vue）。禁止 porttable.vue、port-table.vue
+- 页面放 `src/views/`（PortList.vue、Settings.vue）
+- 可复用组件放 `src/components/`（PortTable.vue、ProcessIcon.vue）
+- 页面负责编排与用户入口；组件负责展示与局部交互，职责不要混在一起
+
+## 调用约束
+
+页面/组件禁止直接 invoke("scan_ports")。通过 `src/api/` 封装，例如 portApi.getPorts()。

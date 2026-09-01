@@ -1,0 +1,69 @@
+---
+description: Rust 后端命名、分层、错误处理与注释
+globs: src-tauri/**/*.rs
+alwaysApply: false
+---
+
+# Rust 后端规范
+
+## 命名
+
+- 文件：snake_case（port_service.rs）。禁止 PortService.rs、port-service.rs
+- Struct：PascalCase（PortManager）
+- Function：snake_case（scan_ports）
+- 常量：全大写（const DEFAULT_TIMEOUT: u64 = 30;）
+
+## 模块
+
+mod.rs 只导出，不写业务：
+
+```rust
+pub mod port_service;
+pub mod process_service;
+```
+
+## 分层
+
+Command：接收 Tauri 调用、参数校验、返回结果。禁止直接操作系统。
+
+```rust
+#[tauri::command]
+pub async fn get_ports() -> Result<Vec<PortInfo>, AppError> {
+    port_service::scan().await
+}
+```
+
+Service（services/）：业务流程、数据组合、状态处理。
+
+System（system/）：OS API、文件系统、网络（macos.rs / windows.rs）。
+
+## 错误处理
+
+业务代码禁止 unwrap()。统一 Result<T, AppError>，错误定义在 errors/app_error.rs：
+
+```rust
+pub enum AppError {
+    ProcessNotFound,
+    PermissionDenied,
+    SystemError(String),
+}
+```
+
+## 注释
+
+public struct / public function 必须有文档注释，说明用途与返回值：
+
+```rust
+/// 扫描当前系统所有监听端口。
+///
+/// 返回：端口号、协议、占用进程
+pub async fn scan_ports()
+```
+
+复杂逻辑写原因，不写步骤：
+
+```rust
+// Windows 下需要通过 PID 查询进程名称，
+// 因为端口信息接口不会直接返回应用名称。
+let process = query_process(pid)?;
+```

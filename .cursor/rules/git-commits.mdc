@@ -1,0 +1,95 @@
+---
+description: Git commit / tag 规范：功能完成后提交、发版先写 changelog 再 bump 打 tag、禁止 push
+alwaysApply: true
+---
+
+# Git Commit 规范
+
+使用 Conventional Commit：type(scope): description
+
+```
+feat(port): add port scanner
+fix(process): fix windows process lookup
+refactor(service): simplify port service
+docs(readme): update document
+```
+
+## 功能完成后必须提交
+
+一个功能写完、改完、修完后，立刻 `git commit`。不要等用户再说「提交」。
+
+- 一次功能对应一次 commit，不要把多个无关改动塞进同一个 commit
+- 提交前必须通过下方检查清单
+- **禁止 `git push`**，除非用户明确要求推送
+- 用户明确说「不要提交」时才跳过 commit
+
+## 提交前必须满足
+
+Rust
+
+- 文件顶部有说明注释
+- public struct / public function 有文档注释
+- 禁止业务 unwrap()
+- 禁止重复代码
+
+Vue / TS
+
+- 文件顶部有说明注释
+- 页面和组件职责明确
+- TypeScript 类型完整，禁止 any
+- API 不允许直接写 invoke
+
+核心原则：每个文件打开第一眼就知道它负责什么；每个函数看到注释就知道为什么存在；业务代码不靠猜。
+
+## Git Tag 规范（发版）
+
+**禁止**在未写 changelog、未更新版本号的情况下直接 `git tag`。
+
+Tag 必须打在「changelog 已提交 + 版本号已对齐」的最新 commit 上，否则 Release CI（`.github/workflows/release.yml`）会因缺少 `docs/changelog/vX.Y.Z/release.json` 而失败。
+
+### 发版顺序（强制）
+
+1. **功能改动全部 commit 完成**（一次功能一个 commit，不与发版步骤混提）。
+2. **写 changelog**：新增 `docs/changelog/vX.Y.Z/release.json`（三语 `zh-CN` / `en` / `ja`）。
+3. **单独提交 changelog**：`docs(changelog): add vX.Y.Z release notes`。
+4. **校验 changelog 可渲染**：
+   ```bash
+   node scripts/render-release-notes.mjs docs/changelog/vX.Y.Z/release.json vX.Y.Z
+   ```
+5. **对齐版本号**：写入下方「版本号文件」清单（同一 semver，如 `0.9.19`）。
+6. **单独提交版本 bump**：`chore(release): bump version to X.Y.Z`（仅版本相关文件，不含功能改动）。
+7. **打 tag**（在最新 commit，即 bump commit 上）：
+   ```bash
+   git tag -a vX.Y.Z -m "vX.Y.Z"
+   ```
+   tag 名带 `v` 前缀，与代码中裸版本号对应。
+8. **推送**（仅用户明确要求时）：
+   ```bash
+   git push origin main
+   git push origin vX.Y.Z
+   ```
+   **禁止**未经用户要求执行 `git push` 或 `git push --tags`。
+
+### 版本号文件（本仓库）
+
+桌面端发版 tag 前，以下文件版本号必须全部对齐：
+
+| 文件 | 字段 |
+| --- | --- |
+| `package.json` | `"version"` |
+| `src-tauri/Cargo.toml` | `[package].version` |
+| `src-tauri/tauri.conf.json` | `version` |
+| `src-tauri/Cargo.lock` | `[package].name = "portkit"` 下的 `version` |
+
+### 校验
+
+- Tag `vX.Y.Z` 与代码版本 `X.Y.Z` 必须一致（仅 tag 多 `v` 前缀）。
+- bump commit 的 `git diff` 应仅含版本相关文件；不要与功能改动或 changelog 混在同一 bump commit。
+- tag 指向的 commit 树中必须包含对应 `docs/changelog/vX.Y.Z/release.json`。
+- 若 bump 后才补 changelog，需删除旧 tag 并在最新 commit 重打：
+  ```bash
+  git tag -d vX.Y.Z
+  git tag -a vX.Y.Z -m "vX.Y.Z"
+  ```
+  已推送的 tag 需用户确认后再 `git push origin vX.Y.Z --force`。
+- 官网 monorepo 中 `vendor/portkit` submodule 指针更新属于部署步骤，不替代本仓库内的版本 bump。

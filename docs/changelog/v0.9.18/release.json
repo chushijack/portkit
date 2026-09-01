@@ -1,0 +1,39 @@
+{
+  "tag": "v0.9.18",
+  "version": "0.9.18",
+  "name": "PortKit v0.9.18",
+  "publishedAt": "2026-08-29T14:30:00Z",
+  "htmlUrl": "https://github.com/chushijack/portkit/releases/tag/v0.9.18",
+  "notes": {
+    "zh-CN": "PortKit v0.9.18",
+    "en": "PortKit v0.9.18",
+    "ja": "PortKit v0.9.18"
+  },
+  "sections": [
+    {
+      "type": "added",
+      "items": {
+        "zh-CN": ["更新日志支持 zh-CN / en / ja 三语维护，编译与发布流程自动校验"],
+        "en": ["Changelog now supports zh-CN / en / ja with build-time validation"],
+        "ja": ["更新履歴を zh-CN / en / ja の三語で管理し、ビルド時に検証"]
+      }
+    },
+    {
+      "type": "improved",
+      "items": {
+        "zh-CN": ["移除应用内更新日志页，设置中改为打开官网 changelog"],
+        "en": ["Remove in-app changelog page; settings now opens the website changelog"],
+        "ja": ["アプリ内更新履歴ページを削除し、設定から公式 changelog を開くように変更"]
+      }
+    },
+    {
+      "type": "fixed",
+      "items": {
+        "zh-CN": ["修复浏览器预览模式下 Tauri API 调用导致控制台报错的问题"],
+        "en": ["Fix console errors when previewing the UI in a plain browser without Tauri"],
+        "ja": ["Tauri なしのブラウザプレビューで Tauri API 呼び出しがエラーになる問題を修正"]
+      }
+    }
+  ],
+  "assets": []
+}

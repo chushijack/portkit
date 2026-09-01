@@ -1,0 +1,23 @@
+{
+  "tag": "v0.9.14",
+  "version": "0.9.14",
+  "name": "PortKit v0.9.14",
+  "publishedAt": "2026-08-29T12:00:00Z",
+  "htmlUrl": "https://github.com/chushijack/portkit/releases/tag/v0.9.14",
+  "notes": {
+    "zh-CN": "PortKit v0.9.14",
+    "en": "PortKit v0.9.14",
+    "ja": "PortKit v0.9.14"
+  },
+  "sections": [
+    {
+      "type": "fixed",
+      "items": {
+        "zh-CN": ["修复 Release 工作流中 pnpm 版本冲突导致 CI 构建失败的问题"],
+        "en": ["Fix CI build failure caused by pnpm version conflict in the Release workflow"],
+        "ja": ["Release ワークフローにおける pnpm バージョン競合による CI ビルド失敗を修正"]
+      }
+    }
+  ],
+  "assets": []
+}

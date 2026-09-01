@@ -1,0 +1,32 @@
+{
+  "tag": "v0.9.17",
+  "version": "0.9.17",
+  "name": "PortKit v0.9.17",
+  "publishedAt": "2026-08-29T12:00:00Z",
+  "htmlUrl": "https://github.com/chushijack/portkit/releases/tag/v0.9.17",
+  "notes": {
+    "zh-CN": "PortKit v0.9.17",
+    "en": "PortKit v0.9.17",
+    "ja": "PortKit v0.9.17"
+  },
+  "sections": [
+    {
+      "type": "fixed",
+      "items": {
+        "zh-CN": [
+          "修复 Release 工作流草稿创建、产物校验与正式发布流程",
+          "修复 finalize-release 在无 checkout 环境下 gh 命令失败的问题"
+        ],
+        "en": [
+          "Fix draft creation, artifact validation, and final publish flow in the Release workflow",
+          "Fix gh command failure in finalize-release when running without checkout"
+        ],
+        "ja": [
+          "Release ワークフローのドラフト作成、成果物検証、正式公開フローを修正",
+          "checkout なし環境で finalize-release の gh コマンドが失敗する問題を修正"
+        ]
+      }
+    }
+  ],
+  "assets": []
+}

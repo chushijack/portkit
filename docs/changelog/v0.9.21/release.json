@@ -1,0 +1,32 @@
+{
+  "tag": "v0.9.21",
+  "version": "0.9.21",
+  "name": "PortKit v0.9.21",
+  "publishedAt": "2026-08-30T06:30:00Z",
+  "htmlUrl": "https://github.com/chushijack/portkit/releases/tag/v0.9.21",
+  "notes": {
+    "zh-CN": "PortKit v0.9.21",
+    "en": "PortKit v0.9.21",
+    "ja": "PortKit v0.9.21"
+  },
+  "sections": [
+    {
+      "type": "fixed",
+      "items": {
+        "zh-CN": [
+          "修复检查更新时同时显示三种语言及 HTML 标签的问题，按界面语言展示更新说明",
+          "latest.json 改为写入 notesLocalized，与 GitHub Release 折叠正文分离"
+        ],
+        "en": [
+          "Fix update dialog showing all locales and raw HTML tags; notes now follow the app language",
+          "Write notesLocalized to latest.json separately from the GitHub Release collapsible body"
+        ],
+        "ja": [
+          "更新確認で三言語と HTML タグが同時に表示される問題を修正し、アプリ言語に合わせて説明を表示",
+          "latest.json に notesLocalized を書き込み、GitHub Release の折りたたみ本文と分離"
+        ]
+      }
+    }
+  ],
+  "assets": []
+}

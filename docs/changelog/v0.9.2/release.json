@@ -1,0 +1,43 @@
+{
+  "tag": "v0.9.2",
+  "version": "0.9.2",
+  "name": "PortKit 0.9.2",
+  "publishedAt": "2026-08-21T00:00:00.000Z",
+  "htmlUrl": "https://github.com/chushijack/portkit/releases/tag/v0.9.2",
+  "notes": {
+    "zh-CN": "端口扫描、进程详情、优雅/强制结束、实时监控、收藏与历史记录。",
+    "en": "Port scanning, process details, graceful/force kill, live monitor, favorites, and history.",
+    "ja": "ポートスキャン、プロセス詳細、正常/強制終了、リアルタイム監視、お気に入りと履歴。"
+  },
+  "sections": [
+    {
+      "type": "added",
+      "items": {
+        "zh-CN": [
+          "扫描监听的 TCP / UDP 端口",
+          "查看进程路径、命令行、CPU 和内存占用",
+          "优雅停止与强制结束进程"
+        ],
+        "en": [
+          "Scan listening TCP / UDP ports",
+          "Inspect process path, command, CPU and memory",
+          "Graceful stop and force kill"
+        ],
+        "ja": [
+          "監視中の TCP / UDP ポートをスキャン",
+          "プロセスのパス、コマンド、CPU・メモリ使用量を確認",
+          "正常終了と強制終了"
+        ]
+      }
+    },
+    {
+      "type": "improved",
+      "items": {
+        "zh-CN": ["支持中文 / 英文 / 日文", "浅色与深色主题"],
+        "en": ["Chinese / English / Japanese", "Light and dark themes"],
+        "ja": ["中国語 / 英語 / 日本語に対応", "ライトテーマとダークテーマ"]
+      }
+    }
+  ],
+  "assets": []
+}

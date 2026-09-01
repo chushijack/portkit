@@ -1,0 +1,32 @@
+{
+  "tag": "v0.9.20",
+  "version": "0.9.20",
+  "name": "PortKit v0.9.20",
+  "publishedAt": "2026-08-30T05:00:00Z",
+  "htmlUrl": "https://github.com/chushijack/portkit/releases/tag/v0.9.20",
+  "notes": {
+    "zh-CN": "PortKit v0.9.20",
+    "en": "PortKit v0.9.20",
+    "ja": "PortKit v0.9.20"
+  },
+  "sections": [
+    {
+      "type": "improved",
+      "items": {
+        "zh-CN": [
+          "更新日志源数据迁移至 docs/changelog，与文档目录统一管理",
+          "补充发版规范：changelog 校验、bump、打 tag 与推送的完整流程"
+        ],
+        "en": [
+          "Move changelog source data to docs/changelog for unified documentation layout",
+          "Document the full release workflow covering changelog validation, version bump, tagging, and push"
+        ],
+        "ja": [
+          "更新履歴ソースを docs/changelog に移行し、ドキュメント構成を統一",
+          "changelog 検証、bump、tag 作成、push を含むリリース手順を規約に追記"
+        ]
+      }
+    }
+  ],
+  "assets": []
+}

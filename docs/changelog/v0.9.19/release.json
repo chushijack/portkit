@@ -1,0 +1,49 @@
+{
+  "tag": "v0.9.19",
+  "version": "0.9.19",
+  "name": "PortKit v0.9.19",
+  "publishedAt": "2026-08-29T16:00:00Z",
+  "htmlUrl": "https://github.com/chushijack/portkit/releases/tag/v0.9.19",
+  "notes": {
+    "zh-CN": "PortKit v0.9.19",
+    "en": "PortKit v0.9.19",
+    "ja": "PortKit v0.9.19"
+  },
+  "sections": [
+    {
+      "type": "added",
+      "items": {
+        "zh-CN": [
+          "便携版（zip）支持应用内自动更新，下载 release 包后替换当前 exe 并重启",
+          "更新弹窗支持「后台更新」，关闭后可在主界面顶栏查看下载进度"
+        ],
+        "en": [
+          "Portable zip builds now support in-app updates by replacing the running exe from the release zip",
+          "Update dialog supports background updates with progress shown in the main layout header"
+        ],
+        "ja": [
+          "ポータブル版（zip）でアプリ内自動更新に対応。release パッケージで exe を差し替えて再起動",
+          "更新ダイアログで「バックグラウンド更新」に対応。閉じた後もメイン画面上部で進捗を表示"
+        ]
+      }
+    },
+    {
+      "type": "fixed",
+      "items": {
+        "zh-CN": [
+          "修复便携版检查更新后版本未变化的问题",
+          "修复 latest.json 无更新说明时应用内显示「暂无更新说明」的问题"
+        ],
+        "en": [
+          "Fix portable builds staying on the old version after an in-app update",
+          "Fix empty in-app release notes when latest.json notes are missing"
+        ],
+        "ja": [
+          "ポータブル版でアプリ内更新後もバージョンが変わらない問題を修正",
+          "latest.json にリリースノートがない場合にアプリ内で空表示になる問題を修正"
+        ]
+      }
+    }
+  ],
+  "assets": []
+}

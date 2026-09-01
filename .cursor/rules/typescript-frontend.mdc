@@ -1,0 +1,48 @@
+---
+description: TypeScript 类型、API 封装与 Pinia 状态管理
+globs: src/**/*.{ts,vue}
+alwaysApply: false
+---
+
+# TypeScript / API / Store 规范
+
+## 类型（强制）
+
+所有 API 必须在 types/ 定义类型。禁止 any。
+
+```ts
+// types/port.ts
+export interface PortInfo {
+  port: number;
+  protocol: string;
+  process: string;
+}
+```
+
+```ts
+// BAD
+const data: any;
+```
+
+## API 调用
+
+统一放 `src/api/`（port.ts、process.ts）。页面禁止直接调用 Tauri。
+
+```ts
+// BAD — 页面/组件里
+invoke("scan_ports");
+
+// GOOD
+export function getPorts() { /* invoke 封装在此 */ }
+portApi.getPorts();
+```
+
+## Pinia
+
+状态放 stores/，使用 defineStore：
+
+```ts
+export const usePortStore = defineStore("port", {
+  // state / getters / actions
+});
+```

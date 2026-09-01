@@ -1,0 +1,129 @@
+---
+description: Git 分支策略与协作流程：GitHub Flow、分支命名、PR、Cursor AI 分支判断与安全规则
+alwaysApply: true
+---
+
+# Git 分支规范
+
+PortKit 使用轻量级 **GitHub Flow**。长期分支仅 `main`，其余均为临时开发分支，通过 Pull Request 合并。
+
+> `main` 始终保持可构建、可测试、可发布状态。
+
+**禁止**创建长期分支：`develop`、`release/*`、`hotfix/*`、`dev`、`development`、`test`。
+
+Commit 与 Tag 发版细则见 `git-commits.mdc`。
+
+## main 主分支
+
+- 保存稳定代码，作为 CI 构建与正式版本发布基础
+- 禁止直接开发新功能、提交未完成/无法编译/未基本测试的代码
+- PR 合并前 CI 必须通过；正式版本通过 Git Tag 发布（如 `v1.0.0`）
+
+## 开发分支命名
+
+从最新 `main` 创建，格式 `<type>/<short-description>`：
+
+- 英文小写，用 `/` 区分类型，用 `-` 分隔单词
+- 不使用中文、空格、特殊符号
+
+| 类型 | 格式 | 用途 | Commit 类型 |
+| --- | --- | --- | --- |
+| feature | `feature/<description>` | 新增功能 | `feat` |
+| fix | `fix/<description>` | Bug 修复 | `fix` |
+| refactor | `refactor/<description>` | 重构（不改变主要业务行为） | `refactor` |
+| docs | `docs/<description>` | 文档修改 | `docs` |
+| chore | `chore/<description>` | 工程维护（依赖、配置、CI 等） | `chore` |
+| test | `test/<description>` | 测试增改 | `test` |
+| perf | `perf/<description>` | 性能优化 | `perf` |
+| ci | `ci/<description>` | CI/CD 配置 | `ci` |
+| build | `build/<description>` | 构建系统 | `build` |
+
+常用：`feature/*`、`fix/*`、`refactor/*`、`docs/*`、`chore/*`。
+
+示例：
+
+```
+feature/port-scanner    fix/windows-process    refactor/port-service
+docs/contributing       chore/upgrade-tauri     ci/release-workflow
+```
+
+## 标准开发流程
+
+```bash
+git switch main
+git pull origin main
+git switch -c feature/port-scanner   # 按任务类型选择前缀
+```
+
+开发完成后检查：
+
+```bash
+git status
+git diff
+```
+
+Rust：
+
+```bash
+cargo fmt --all -- --check
+cargo clippy --all-targets --all-features -- -D warnings
+cargo test
+```
+
+前端（以项目实际配置为准）：
+
+```bash
+pnpm lint
+pnpm type-check
+pnpm build
+```
+
+## Pull Request
+
+```
+feature/*  →  PR  →  main
+```
+
+PR 应包含：修改内容、修改原因、测试方式、相关影响、已知问题。
+
+合并前：CI 通过、可正常构建、无无关修改、无调试代码、无敏感信息。
+
+## 版本发布
+
+不使用 `release/*` 分支。流程：
+
+```
+feature/* → PR → main → Git Tag → GitHub Actions → Tauri Build → GitHub Release
+```
+
+发版顺序与 changelog 要求见 `git-commits.mdc`。
+
+紧急修复：从 `main` 创建 `fix/*`（不用 `hotfix/*`），合并后打 patch tag（如 `v1.0.1`）。
+
+## Cursor AI 分支判断
+
+开始修改代码前执行：
+
+```bash
+git branch --show-current
+git status
+```
+
+按任务类型使用对应分支前缀。若当前在 `main` 且任务较大，**建议**创建开发分支，**不要自动切换**除非用户明确要求。
+
+## Git 安全规则
+
+未经用户明确要求，**禁止**自动执行：
+
+```bash
+git reset --hard    git clean -fd    git push --force
+git branch -D       git rebase       git commit    git push
+```
+
+不要删除用户分支、覆盖未提交修改、强制改历史、擅自解决 Merge Conflict、修改 `git user.name` / `git user.email`。
+
+工作区有未提交修改时先 `git status`，保护现有修改。
+
+## 与 PortKit 开发规范的关系
+
+分支规范只管协作、版本、提交与发布，不修改业务架构。继续遵守 `portkit-core.mdc` 中的 Rust / Vue / TypeScript 分层与代码规范。

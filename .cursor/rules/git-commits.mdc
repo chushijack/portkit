@@ -5,6 +5,8 @@ alwaysApply: true
 
 # Git Commit 规范
 
+分支策略与 PR 流程见 `git-branches.mdc`。
+
 使用 Conventional Commit：type(scope): description
 
 ```
@@ -13,6 +15,15 @@ fix(process): fix windows process lookup
 refactor(service): simplify port service
 docs(readme): update document
 ```
+
+常用类型：`feat`、`fix`、`refactor`、`docs`、`chore`、`test`、`perf`、`style`、`build`、`ci`。
+
+## Commit 禁止事项
+
+- 使用英文，简洁准确，遵循 Conventional Commit
+- 禁止无意义描述：`update`、`fix bug`、`test`、`修改代码`、`update code`、`cursor update`、`AI generated` 等
+- 禁止在 message 中添加 Cursor / AI / ChatGPT / `Co-authored-by: Cursor` 等
+- 禁止擅自修改用户的 `git user.name` / `git user.email`
 
 ## 功能完成后必须提交
 

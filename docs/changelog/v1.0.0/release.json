@@ -1,0 +1,87 @@
+{
+  "tag": "v1.0.0",
+  "version": "1.0.0",
+  "name": "PortKit v1.0.0",
+  "publishedAt": "2026-09-01T08:00:00Z",
+  "htmlUrl": "https://github.com/chushijack/portkit/releases/tag/v1.0.0",
+  "notes": {
+    "zh-CN": "PortKit 首个正式版本：跨平台端口管理桌面应用，帮开发者快速看清本机谁占用了哪个端口，并安全地释放它。",
+    "en": "PortKit first stable release: a cross-platform port management desktop app that helps developers see which process owns a port and release it safely.",
+    "ja": "PortKit 初の安定版：クロスプラットフォームのポート管理デスクトップアプリ。どのプロセスがポートを占有しているかを素早く把握し、安全に解放できます。"
+  },
+  "sections": [
+    {
+      "type": "added",
+      "items": {
+        "zh-CN": [
+          "扫描本机 TCP / UDP 监听端口，识别常见开发服务",
+          "查看进程路径、启动命令、CPU 与内存占用",
+          "优雅关闭或强制结束占用端口的进程",
+          "实时监控端口增减，收藏常用端口，保留扫描与关闭历史",
+          "便携版（zip）支持应用内自动更新与后台下载",
+          "更新日志支持中文 / 英文 / 日文三语维护"
+        ],
+        "en": [
+          "Scan listening TCP / UDP ports and identify common dev services",
+          "Inspect process path, command line, CPU and memory usage",
+          "Gracefully stop or force kill processes holding ports",
+          "Live port monitor, favorites, and scan/kill history",
+          "Portable zip builds support in-app updates with background download",
+          "Changelog maintained in Chinese, English, and Japanese"
+        ],
+        "ja": [
+          "ローカルの TCP / UDP 監視ポートをスキャンし、一般的な開発サービスを識別",
+          "プロセスのパス、起動コマンド、CPU・メモリ使用量を確認",
+          "ポートを占有するプロセスを正常終了または強制終了",
+          "リアルタイム監視、お気に入り、スキャン・終了履歴",
+          "ポータブル版（zip）でアプリ内自動更新とバックグラウンドダウンロードに対応",
+          "更新履歴を中国語 / 英語 / 日本語の三語で管理"
+        ]
+      }
+    },
+    {
+      "type": "improved",
+      "items": {
+        "zh-CN": [
+          "支持中文 / 英文 / 日文界面与浅色 / 深色主题",
+          "更新日志按版本目录维护，编译与发布流程自动校验",
+          "Release 工作流支持草稿创建、产物校验与 latest.json 多语言写入"
+        ],
+        "en": [
+          "Chinese / English / Japanese UI with light and dark themes",
+          "Changelog maintained per version with build-time validation",
+          "Release workflow supports draft creation, artifact validation, and localized latest.json"
+        ],
+        "ja": [
+          "中国語 / 英語 / 日本語 UI とライト / ダークテーマに対応",
+          "更新履歴をバージョン別に管理し、ビルド・リリース時に自動検証",
+          "Release ワークフローでドラフト作成、成果物検証、latest.json の多言語書き込みに対応"
+        ]
+      }
+    },
+    {
+      "type": "fixed",
+      "items": {
+        "zh-CN": [
+          "修复浏览器预览模式下 Tauri API 调用导致控制台报错的问题",
+          "修复便携版检查更新后版本未变化的问题",
+          "修复检查更新时同时显示三种语言及 HTML 标签的问题",
+          "修复 latest.json 无更新说明时应用内显示异常的问题"
+        ],
+        "en": [
+          "Fix console errors when previewing the UI in a browser without Tauri",
+          "Fix portable builds staying on the old version after an in-app update",
+          "Fix update dialog showing all locales and raw HTML tags",
+          "Fix empty in-app release notes when latest.json notes are missing"
+        ],
+        "ja": [
+          "Tauri なしのブラウザプレビューで Tauri API 呼び出しがエラーになる問題を修正",
+          "ポータブル版でアプリ内更新後もバージョンが変わらない問題を修正",
+          "更新確認で三言語と HTML タグが同時に表示される問題を修正",
+          "latest.json にリリースノートがない場合のアプリ内表示異常を修正"
+        ]
+      }
+    }
+  ],
+  "assets": []
+}

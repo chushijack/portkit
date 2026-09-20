@@ -87,6 +87,16 @@ pnpm tauri build
   </picture>
 </a>
 
+## 支持 PortKit
+
+PortKit 是一个开源且免费的开发者工具。
+
+如果 PortKit 对你的开发工作有所帮助，
+欢迎支持项目持续维护和开发。
+
+- [GitHub Sponsors](https://github.com/sponsors/chushijack)
+- [爱发电](https://afdian.com/a/portkit)
+
 ## 许可证
 
 本项目采用 [Apache License 2.0](LICENSE) 开源协议。

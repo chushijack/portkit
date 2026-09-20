@@ -87,6 +87,16 @@ Release notes live in `docs/changelog/<tag>/release.json` and are embedded into 
   </picture>
 </a>
 
+## Support PortKit
+
+PortKit is open source and free to use.
+
+If PortKit has helped you in your development workflow,
+consider supporting the project to help us continue maintaining and improving it.
+
+- [GitHub Sponsors](https://github.com/sponsors/chushijack)
+- [爱发电](https://afdian.com/a/portkit)
+
 ## License
 
 Licensed under the [Apache License, Version 2.0](LICENSE).
